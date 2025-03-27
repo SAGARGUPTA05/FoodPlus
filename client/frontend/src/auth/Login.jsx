@@ -41,13 +41,13 @@ function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen w-full px-4">
+    <div className="flex items-center justify-center min-h-screen w-screen px-4">
       <form
         className="md:p-8 w-full max-w-md md:border border-gray-200 mx-auto bg-white shadow-lg rounded-lg p-6"
         onSubmit={loginSubmitHandler}
       >
         <div className="mb-4 text-center">
-          <h1 className="font-bold text-2xl text-center">Eats</h1>
+          <h1 className="font-bold text-2xl text-center">Foodplus</h1>
         </div>
         <div className="relative mb-6">
           <input

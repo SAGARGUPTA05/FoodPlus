@@ -46,13 +46,13 @@ function Signup() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen ">
+    <div className="flex items-center justify-center min-h-screen w-screen ">
       <form
         className="md:p-8 w-full max-w-md rounded-lg md:border border-gray-200 mx-4"
         onSubmit={loginSubmitHandler} // Correct placement of onSubmit
       >
         <div className="mb-4">
-          <h1 className="font-bold text-2xl text-center">Eats</h1>
+          <h1 className="font-bold text-2xl text-center">Foodplus</h1>
         </div>
         
      
