@@ -3,10 +3,12 @@ import { Mail, LockKeyholeIcon, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { userLoginSchema } from "../schema/userSchema";
 import { z } from "zod";
+import { useUserStore } from "../store/useUserStore";
 
 function Login() {
-  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const { login, loading } = useUserStore(); // ✅ Ensure 'loadIng' exists in Zustand
+
   const [input, setInput] = useState({
     email: "",
     password: "",
@@ -17,19 +19,16 @@ function Login() {
     setInput({ ...input, [name]: value });
   };
 
-  const loginSubmitHandler = (e) => {
+  const loginSubmitHandler = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      userLoginSchema.parse(input);
+    setErrors({}); // Reset errors before validation
 
-      console.log("Validated Data", input);
-      setTimeout(() => {
-        console.log("Login successful:", input);
-        setLoading(false);
-      }, 2000);
+    try {
+      userLoginSchema.parse(input); // Validate input with Zod
+      
+
+      await login(input);
     } catch (err) {
-      setLoading(false);
       if (err instanceof z.ZodError) {
         const errorMessages = err.errors.reduce((acc, error) => {
           acc[error.path[0]] = error.message;
@@ -47,8 +46,9 @@ function Login() {
         onSubmit={loginSubmitHandler}
       >
         <div className="mb-4 text-center">
-          <h1 className="font-bold text-2xl text-center">Foodplus</h1>
+          <h1 className="font-bold text-2xl">Foodplus</h1>
         </div>
+
         <div className="relative mb-6">
           <input
             type="email"
@@ -62,6 +62,7 @@ function Login() {
           <Mail className="absolute left-2 inset-y-2 text-gray-500 pointer-events-none" />
           {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
         </div>
+
         <div className="relative mb-6">
           <input
             type="password"
@@ -75,13 +76,14 @@ function Login() {
           <LockKeyholeIcon className="text-gray-500 absolute left-2 inset-y-2" />
           {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
         </div>
+
         <div className="mb-6">
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading} // ✅ Zustand's 'loadIng' instead of 'loading'
             className="btn-orange w-full flex items-center justify-center p-2 rounded-md bg-orange-500 text-white hover:bg-orange-600 transition duration-300"
           >
-            {loading ? (
+            {loading ? ( // ✅ Zustand loading state
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Please wait
@@ -91,7 +93,9 @@ function Login() {
             )}
           </button>
         </div>
+
         <hr />
+        
         <p className="text-center mt-2">
           Don't have an account?{" "}
           <Link to="/signup" className="text-blue-500">

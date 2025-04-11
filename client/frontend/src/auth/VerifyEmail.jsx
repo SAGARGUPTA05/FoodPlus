@@ -1,33 +1,52 @@
 import { Loader2 } from "lucide-react";
 import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUserStore } from "../store/useUserStore";
+import { toast } from "react-toastify"; // Added for error messages
 
 function VerifyEmail() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const inputRef = useRef([]);
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const { verifyEmail, loading } = useUserStore();
 
   const handleChange = (value, index) => {
     if (/^[a-zA-Z0-9]$/.test(value) || value === "") {
-      const newotp = [...otp];
-      newotp[index] = value;
-      setOtp(newotp);
+      const newOtp = [...otp];
+      newOtp[index] = value;
+      setOtp(newOtp);
     }
-    // Move to the next input field
     if (value !== "" && index < 5) {
       inputRef.current[index + 1].focus();
     }
   };
-
+  localStorage.clear()
   const handleKeyDown = (index, e) => {
     if (e.key === "Backspace") {
       if (!otp[index] && index > 0) {
         inputRef.current[index - 1].focus();
       }
-      const newotp = [...otp];
-      newotp[index] = "";
-      setOtp(newotp);
+      const newOtp = [...otp];
+      newOtp[index] = "";
+      setOtp(newOtp);
+    }
+  };
+
+  const submitHandler = async (e) => {
+    e.preventDefault();
+    const verificationCode = otp.join("");
+
+    if (verificationCode.length < 6) {
+      toast.error("Please enter the full 6-digit code.");
+      return;
+    }
+
+    try {
+      await verifyEmail(verificationCode);
+      navigate("/"); // Redirect on success
+      
+    } catch (error) {
+      toast.error("Verification failed. Try again.");
     }
   };
 
@@ -37,11 +56,11 @@ function VerifyEmail() {
         <div className="text-center">
           <h1 className="font-extrabold text-2xl">Verify your email</h1>
           <p className="text-sm text-gray-600">
-            Enter the 6 digit code sent to your email address
+            Enter the 6-digit code sent to your email address.
           </p>
         </div>
 
-        <form action="">
+        <form onSubmit={submitHandler}>
           <div className="flex justify-between">
             {otp.map((letter, index) => (
               <input
@@ -58,14 +77,21 @@ function VerifyEmail() {
               />
             ))}
           </div>
-          {loading ? (
-            <button className="btn-orange mt-6 w-full flex items-center justify-center ">
-              <Loader2 className="mr-2 w-4 h-4 animate-spin"></Loader2> Please
-              wait
-            </button>
-          ) : (
-            <button className="btn-orange mt-6 w-full ">Verify</button>
-          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-orange mt-6 w-full flex items-center justify-center"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                Please wait
+              </>
+            ) : (
+              "Verify"
+            )}
+          </button>
         </form>
       </div>
     </div>

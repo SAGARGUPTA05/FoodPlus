@@ -1,43 +1,63 @@
-import { CaseLower } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
+import { useRestaurantStore } from "../store/useRestaurantStore";
+import { useThemeStore } from "../store/useThemeStore";
 
 function Orders() {
+  const { getRestaurantOrders, updateRestaurantOrder, restaurantOrders } =
+    useRestaurantStore();
+  const {theme}=useThemeStore()
+  const isDark=theme==='dark';
+  const handleStatusChange = async (id, status) => {
+    await updateRestaurantOrder(id, status);
+  };
+
+  useEffect(() => {
+    getRestaurantOrders();
+  }, []);
+
   return (
     <div className="max-w-6xl my-10 mx-auto">
-      <h3 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-10">
-        Orders overview
-      </h3>
-      <div className="space-y-8 ">
-        {/*restaurant orders displayed here */}
-        <div className="flex flex-col md:flex-row justify-between items-start sm:items-center bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 sm:p-8 border-gray-200 dark:border-gray-700">
-          <div className="flex-1 mb-6 sm:mb-0 ">
-            <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-100 ">
-              Lorem ipsum dolor sit amet consectetur.
+    <h3 className={`text-3xl font-extrabold mb-10 ${isDark ? "text-[#E0E0E0]" : "text-gray-900"}`}>
+      Orders overview
+    </h3>
+  
+    <div className="space-y-8">
+      {restaurantOrders.map((order, idx) => (
+        <div
+          key={idx}
+          className={`flex flex-col md:flex-row justify-between items-start sm:items-center shadow-lg rounded-xl p-6 sm:p-8 border 
+            ${isDark ? "bg-[#121212] border-[#444444]" : "bg-white border-gray-200"}`}
+        >
+          <div className="flex-1 mb-6 sm:mb-0">
+            <h3 className={`font-semibold text-xl ${isDark ? "text-[#E0E0E0]" : "text-gray-800"}`}>
+              {order.deliveryDetails.name}
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
-              <span className="font-semibold">Address: </span> Lorem ipsum dolor
-              sit amet consectetur.
+            <p className={`${isDark ? "text-[#B0B0B0]" : "text-gray-600"} mt-2`}>
+              <span className="font-semibold">Address: </span>
+              {order.deliveryDetails.address}
             </p>
-            <p className="text-gray-600` dark:text-gray-400 mt-2">
-              {" "}
-              <span className="font-semibold">Total Amount: </span> 160
+            <p className={`${isDark ? "text-[#B0B0B0]" : "text-gray-600"} mt-2`}>
+              <span className="font-semibold">Total Amount: </span>
+              ₹{order.totalAmount}
             </p>
           </div>
-          <div className="w-full sm:w-1/3 ">
+  
+          <div className="w-full sm:w-1/3">
             <label
-              htmlFor=""
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              className={`block text-sm font-medium mb-2 ${isDark ? "text-[#B0B0B0]" : "text-gray-700"}`}
             >
               Order Status
             </label>
-            <select className="w-full" name="" id="">
-              {[
-                "Pending",
-                "Confirmed",
-                "Preparing",
-                "OutForDelivery",
-                "Delivered",
-              ].map((item, index) => (
+            <select
+              defaultValue={order.status}
+              onChange={(e) => handleStatusChange(order._id, e.target.value)}
+              className={`w-full border rounded-md p-2 ${
+                isDark
+                  ? "bg-[#121212] text-[#E0E0E0] border-[#444444]"
+                  : "bg-white text-black border-gray-300"
+              }`}
+            >
+              {["Pending", "Confirmed", "Preparing", "OutForDelivery", "Delivered"].map((item, index) => (
                 <option key={index} value={item.toLowerCase()}>
                   {item}
                 </option>
@@ -45,44 +65,10 @@ function Orders() {
             </select>
           </div>
         </div>
-        <div className="flex flex-col md:flex-row justify-between items-start sm:items-center bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 sm:p-8 border-gray-200 dark:border-gray-700">
-          <div className="flex-1 mb-6 sm:mb-0 ">
-            <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-100 ">
-              Lorem ipsum dolor sit amet consectetur.
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
-              <span className="font-semibold">Address: </span> Lorem ipsum dolor
-              sit amet consectetur.
-            </p>
-            <p className="text-gray-600` dark:text-gray-400 mt-2">
-              {" "}
-              <span className="font-semibold">Total Amount: </span> 160
-            </p>
-          </div>
-          <div className="w-full sm:w-1/3 ">
-            <label
-              htmlFor=""
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Order Status
-            </label>
-            <select className="w-full" name="" id="">
-              {[
-                "Pending",
-                "Confirmed",
-                "Preparing",
-                "OutForDelivery",
-                "Delivered",
-              ].map((item, index) => (
-                <option key={index} value={item.toLowerCase()}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
+      ))}
     </div>
+  </div>
+  
   );
 }
 

@@ -1,80 +1,106 @@
-import { Minus, Plus } from "lucide-react";
 import React, { useState } from "react";
+import { useCartStore } from "../../store/useCartStore";
 import CheckOutConfirmPage from "./CheckOutConfirmPage";
+import { Minus, Plus } from "lucide-react";
+import MobileCart from "../MoblileCart";
+import { useThemeStore } from "../../store/useThemeStore";
 
 function Cart() {
-  const [quantity, setQuantity] = useState(2);
-  const [open,setOpen]=useState(false)
+  const [open, setOpen] = useState(false);
+  const { cart, removeFromCart, incrementQuantity, decrementQuantity, clearCart } = useCartStore();
+  const { theme } = useThemeStore();
+  const isDark = theme === "dark";
 
-  const handleIncrement = () => {
-    setQuantity((prev) => prev + 1);
-  };
-
-  const handleDecrement = () => {
-    if (quantity > 1) {
-      setQuantity((prev) => prev - 1);
-    }
-  };
+  const totalPrice = cart.reduce((acc, item) => acc + item.quantity * item.price, 0).toFixed(2);
 
   return (
-    <div className="max-w-6xl flex flex-col mx-auto my-10 ">
-      <div className="flex justify-end">
-        <button className="px-4 py-2 bg-red-500  rounded-md">
-          Clear All
-        </button>
+    <div className={`max-w-6xl mx-auto my-10 ${isDark ? "text-[#E0E0E0]" : "text-gray-800"}`}>
+      {/* Desktop View */}
+      <div className="hidden md:block">
+        <div className="flex justify-end">
+          <button
+            onClick={clearCart}
+            className="px-4 py-2 bg-red-500 text-black rounded-md"
+          >
+            Clear All
+          </button>
+        </div>
+        <table className={`w-full mt-4 ${isDark ? "border-[#444444]" : "border-gray-300"}`}>
+          <thead>
+            <tr className={`${isDark ? "bg-[#444444]" : "bg-gray-200"}`}>
+              <th className="p-2">Items</th>
+              <th className="p-2">Title</th>
+              <th className="p-2">Price</th>
+              <th className="p-2">Quantity</th>
+              <th className="p-2">Total</th>
+              <th className="p-2 text-right">Remove</th>
+            </tr>
+          </thead>
+          <tbody>
+            {cart.map((item, idx) => (
+              <tr key={idx} className={`${isDark ? "border-b border-[#444444]" : ""}`}>
+                <td className="p-2">
+                  <img className="rounded-full w-12 h-12 object-cover" src={item.image} alt={item.name} />
+                </td>
+                <td className="p-2">{item.name}</td>
+                <td className="p-2">₹{item.price}</td>
+                <td className="p-2 flex items-center justify-center">
+                  <div className={`w-fit px-2 flex items-center rounded-full py-1 ${isDark ? "bg-[#444444]" : "bg-gray-100"} shadow-sm`}>
+                    <button
+                      onClick={() => decrementQuantity(item._id)}
+                      className={`p-1 ${isDark ? "bg-[#888888] hover:bg-[#B0B0B0]" : "bg-gray-200 hover:bg-gray-300"} rounded-full`}
+                    >
+                      <Minus className="w-3 h-3 text-black" />
+                    </button>
+                    <span className="text-lg font-semibold mx-2">{item.quantity}</span>
+                    <button
+                      onClick={() => incrementQuantity(item._id)}
+                      className={`p-1 ${isDark ? "bg-[#888888] hover:bg-[#B0B0B0]" : "bg-gray-200 hover:bg-gray-300"} rounded-full`}
+                    >
+                      <Plus className="w-3 h-3 text-black " />
+                    </button>
+                  </div>
+                </td>
+                <td className="p-2">₹{(item.quantity * item.price).toFixed(2)}</td>
+                <td className="text-right">
+                  <button onClick={() => removeFromCart(item._id)} className="btn-orange px-3 py-1 rounded-md">
+                    Remove
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th className="p-2">Total</th>
+              <th colSpan={5} className="text-right p-2">₹{totalPrice}</th>
+            </tr>
+          </tfoot>
+        </table>
+
+        {cart.length > 0 && (
+          <div className="mt-4 flex justify-end">
+            <button className="btn-orange" onClick={() => setOpen(true)}>
+              Proceed to Checkout
+            </button>
+          </div>
+        )}
       </div>
-      <table className="w-full  border-gray-300 mt-4">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className=" p-2">Items</th>
-            <th className=" p-2">Title</th>
-            <th className=" p-2">Price</th>
-            <th className=" p-2">Quantity</th>
-            <th className=" p-2">Total</th>
-            <th className=" p-2 text-right">Remove</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td className="p-2">🍔</td>
-            <td className=" p-2">Burger</td>
-            <td className=" p-2">$5.00</td>
-            <td className=" p-2  flex items-center justify-center">
-              <div className="w-fit px-2 flex items-center  justify-center  border rounded-full  py-1 bg-gray-100 shadow-sm">
-                <button
-                  onClick={handleDecrement}
-                  className="p-1 rounded-full bg-gray-200 hover:bg-gray-300 transition flex items-center justify-center border-none outline-none"
-                >
-                  <Minus className="w-3 h-3" />
-                </button>
-                <span className="text-lg font-semibold">{quantity}</span>
-                <button
-                  onClick={handleIncrement}
-                  className="p-1 rounded-full bg-gray-200 hover:bg-gray-300 transition flex items-center justify-center"
-                >
-                  <Plus className="w-3 h-3" />
-                </button>
-              </div>
-            </td>
-            <td className=" p-2">${(quantity * 5).toFixed(2)}</td>
-            <td className="  text-right">
-              <button className="px-3 py-1 btn-orange text-sm   rounded-md">
-                Remove
-              </button>
-            </td>
-          </tr>
-        </tbody>
-        <tfoot >
-          <tr >
-            <th >Total</th>
-            <th colSpan={5} className="text-right ">80</th>
-          </tr>
-        </tfoot>
-      </table>
-      <div className="flex justify-end my-5 ">
-        <button className="btn-orange" onClick={()=>{setOpen(true)}}>CheckOut</button>
+
+      {/* Mobile View */}
+      <div className="md:hidden">
+        <MobileCart
+          cart={cart}
+          incrementQuantity={incrementQuantity}
+          decrementQuantity={decrementQuantity}
+          removeFromCart={removeFromCart}
+          clearCart={clearCart}
+          totalPrice={totalPrice}
+          setOpen={setOpen}
+        />
       </div>
-      <CheckOutConfirmPage open={open}  setOpen={setOpen}/>
+
+      <CheckOutConfirmPage open={open} setOpen={setOpen} />
     </div>
   );
 }

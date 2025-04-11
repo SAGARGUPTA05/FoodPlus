@@ -3,15 +3,24 @@ import React, { useEffect, useState } from "react";
 import { z } from "zod";
 import menuSchema from "../schema/menuSchema";
 
+import { useMenuStore } from "../store/useMenuStore";
+import { useThemeStore } from "../store/useThemeStore";
+
 function EditMenu({ selectedMenu, setEditMenu}) {
-  const [loading,setLoading] = useState(false);
+
+  const {updateMenu,loading}=useMenuStore()
+  const {theme}=useThemeStore();
+  const isDark = theme === "dark";
+  
   const [errors, setErrors] = useState({});
   const [input, setInput] = useState({
       name: "",
       description: "",
       price: "",
-      menuImage: null,
+      image: null,
     });
+
+   
 
 
   const changeHandler = (e) => {
@@ -30,18 +39,23 @@ function EditMenu({ selectedMenu, setEditMenu}) {
   };
  
 
- const submitHandler = (e) => {
-    e.preventDefault();
-    setLoading(true);
-
+ const submitHandler = async (e) => {
+    
+  e.preventDefault();
     try {
       menuSchema.parse(input);
-      console.log("Validated Data:", input);
-      setTimeout(() => {
-        console.log("Menu added successfully:", input);
-        setLoading(false);
-        setEditMenu(false); // Close the modal after adding menu
-      }, 2000);
+      
+    const formData=new FormData();
+    formData.append("name",input.name)
+    formData.append("description",input.description)
+    formData.append("price",input.price)
+    if(input.image){
+      formData.append("image",input.image)
+    }
+    
+    await updateMenu(selectedMenu._id,formData)
+    setEditMenu(false)
+    
     } catch (err) {
       if (err instanceof z.ZodError) {
         const errorMessages = err.errors.reduce((acc, error) => {
@@ -50,114 +64,99 @@ function EditMenu({ selectedMenu, setEditMenu}) {
         }, {});
         setErrors(errorMessages);
       }
-      setLoading(false);
+     
     }
   };
 
     // Initialize input state with selectedMenu values
     useEffect(() => {
         setInput({
-          name: selectedMenu.title || "",
+          name: selectedMenu.name || "",
           description: selectedMenu.description || "",
           price: selectedMenu.price || "",
-          menuImage: null, // Keep this null initially
+          image: null, // Keep this null initially
         });
       }, [selectedMenu, setInput]);
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-white/75">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-6xl">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold">Edit Menu</h3>
-          <button
-            onClick={() => setEditMenu(false)}
-            className="text-gray-600 hover:text-black"
-          >
-            <X />
-          </button>
-        </div>
-        <p>Update your menu to keep your offerings fresh and exciting.</p>
-
-        <form onSubmit={submitHandler}>
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium">Name</label>
-                        <input
-                          type="text"
-                          placeholder="Enter menu name"
-                          name="name"
-                          className="w-full border rounded-lg p-2"
-                          value={input.name}
-                          onChange={changeHandler}
-                        />
-                        {errors.name && (
-                          <p className="text-red-500 text-sm">{errors.name}</p>
-                        )}
-                      </div>
-        
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium">Description</label>
-                        <textarea
-                          placeholder="Enter menu description"
-                          name="description"
-                          className="w-full border rounded-lg p-2"
-                          value={input.description}
-                          onChange={changeHandler}
-                        ></textarea>
-                        {errors.description && (
-                          <p className="text-red-500 text-sm">{errors.description}</p>
-                        )}
-                      </div>
-        
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium">
-                          Price (Rupees)
-                        </label>
-                        <input
-                          type="number"
-                          placeholder="Enter price"
-                          name="price"
-                          className="w-full border rounded-lg p-2"
-                          value={input.price}
-                          onChange={changeHandler}
-                        />
-                        {errors.price && (
-                          <p className="text-red-500 text-sm">{errors.price}</p>
-                        )}
-                      </div>
-        
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium">
-                          Upload Menu Image
-                        </label>
-                        <input
-                          type="file"
-                          name="menuImage"
-                          className="w-full border rounded-lg p-2"
-                          onChange={changeHandler}
-                        />
-                        {errors.menuImage && (
-                          <p className="text-red-500 text-sm">{errors.menuImage}</p>
-                        )}
-                      </div>
-        
-                      {loading ? (
-                        <button
-                          className="btn-orange flex items-center justify-center w-full"
-                          disabled
-                        >
-                          <Loader2 className="animate-spin mr-2" /> Please wait
-                        </button>
-                      ) : (
-                        <button
-                          type="submit"
-                          className="w-full btn-orange py-2 rounded-lg"
-                        >
-                          Save Menu
-                        </button>
-                      )}
-                    </form>
+    <div className={`fixed inset-0 flex items-center justify-center ${isDark ? "bg-[#121212]/75" : "bg-white/75"}`}>
+    <div className={`p-6 rounded-lg shadow-lg w-full max-w-lg ${isDark ? "bg-[#121212]" : "bg-white"}`}>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className={`text-xl font-bold ${isDark ? "text-[#E0E0E0]" : "text-black"}`}>Edit Menu</h3>
+        <button
+          onClick={() => setEditMenu(false)}
+          className={`${isDark ? "text-[#888888] hover:text-[#E0E0E0]" : "text-gray-600 hover:text-black"}`}
+        >
+          <X />
+        </button>
       </div>
+  
+      <p className={`${isDark ? "text-[#B0B0B0]" : "text-gray-700"}`}>
+        Update your menu to keep your offerings fresh and exciting.
+      </p>
+  
+      <form onSubmit={submitHandler}>
+        {["name", "description", "price", "image"].map((field) => (
+          <div key={field} className="mb-4">
+            <label
+              htmlFor={field}
+              className={`block text-sm font-medium ${isDark ? "text-[#E0E0E0]" : "text-black"}`}
+            >
+              {field === "image" ? "Upload Menu Image" : field.charAt(0).toUpperCase() + field.slice(1)}
+            </label>
+            {field === "description" ? (
+              <textarea
+                id={field}
+                name={field}
+                value={input[field]}
+                onChange={changeHandler}
+                className={`w-full border rounded-lg p-2 ${isDark ? "bg-[#121212] text-[#E0E0E0] border-[#444444]" : "bg-white text-black border-gray-300"}`}
+                placeholder={`Enter menu ${field}`}
+              />
+            ) : field === "image" ? (
+              <input
+                type="file"
+                id={field}
+                name={field}
+                onChange={changeHandler}
+                className={`w-full border rounded-lg p-2 ${isDark ? "bg-[#121212] text-[#E0E0E0] border-[#444444]" : "bg-white text-black border-gray-300"}`}
+              />
+            ) : (
+              <input
+                type={field === "price" ? "number" : "text"}
+                id={field}
+                name={field}
+                value={input[field]}
+                onChange={changeHandler}
+                className={`w-full border rounded-lg p-2 ${isDark ? "bg-[#121212] text-[#E0E0E0] border-[#444444]" : "bg-white text-black border-gray-300"}`}
+                placeholder={`Enter menu ${field}`}
+              />
+            )}
+            {errors[field] && (
+              <p className="text-red-500 text-sm">{errors[field]}</p>
+            )}
+          </div>
+        ))}
+  
+        {loading ? (
+          <button
+            className="btn-orange flex items-center justify-center w-full"
+            disabled
+          >
+            <Loader2 className="animate-spin mr-2" /> Please wait
+          </button>
+        ) : (
+          <button
+            type="submit"
+            className="w-full btn-orange py-2 rounded-lg"
+          >
+            Save Menu
+          </button>
+        )}
+      </form>
     </div>
+  </div>
+  
   );
 }
 
